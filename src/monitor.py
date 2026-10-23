@@ -21,6 +21,7 @@ class Config:
     run_once: bool
     log_file: Optional[str]
     log_level: str
+    log_file_level: str
 
 
 @dataclass
@@ -53,9 +54,14 @@ def load_config() -> Config:
             raise ValueError(f"{name} deve ser maior que zero, recebido: {number}")
         return number
 
-    level = os.getenv("LOG_LEVEL", "INFO").upper()
-    if level not in ("DEBUG", "INFO", "WARNING", "ERROR"):
-        raise ValueError(f"LOG_LEVEL inválido: '{level}'")
+    def valid_level(name: str, default: str) -> str:
+        level = os.getenv(name, default).upper()
+        if level not in ("INFO", "ERROR"):
+            raise ValueError(f"{name} inválido: '{level}'")
+        return level
+
+    level = valid_level("LOG_LEVEL", "INFO")
+    file_level = valid_level("LOG_FILE_LEVEL", level)
 
     return Config(
         urls=urls,
@@ -64,19 +70,28 @@ def load_config() -> Config:
         run_once=os.getenv("RUN_ONCE", "false").strip().lower() in ("1", "true", "yes"),
         log_file=os.getenv("LOG_FILE") or None,
         log_level=level,
+        log_file_level=file_level,
     )
 
 
 def setup_logging(config: Config) -> None:
     fmt = logging.Formatter("%(asctime)s | %(levelname)-7s | %(message)s",
                             datefmt="%Y-%m-%d %H:%M:%S")
-    handlers = [logging.StreamHandler(sys.stdout)]
+
+    console = logging.StreamHandler(sys.stdout)
+    console.setLevel(config.log_level)
+    handlers = [console]
+
     if config.log_file:
-        handlers.append(logging.FileHandler(config.log_file, encoding="utf-8"))
+        file_handler = logging.FileHandler(config.log_file, encoding="utf-8")
+        file_handler.setLevel(config.log_file_level)
+        handlers.append(file_handler)
+
     for handler in handlers:
         handler.setFormatter(fmt)
         logger.addHandler(handler)
-    logger.setLevel(config.log_level)
+    # O logger deixa tudo passar; cada handler filtra pelo seu próprio nível
+    logger.setLevel(logging.DEBUG)
 
 
 def check_url(url: str, timeout: float) -> CheckResult:

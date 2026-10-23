@@ -6,8 +6,9 @@
     INTERVAL   Segundos entre cada rodada de checagens (padrão: 30)
     TIMEOUT    Timeout de cada requisição, em segundos (padrão: 5)
     RUN_ONCE   "true" executa uma única rodada e sai (padrão: false)
-    LOG_FILE   Caminho de um arquivo de log opcional (padrão: só stdout)
-    LOG_LEVEL  DEBUG, INFO, WARNING, ERROR (padrão: INFO)
+    LOG_LEVEL  INFO, ERROR (padrão: INFO)
+    LOG_FILE   Caminho de um arquivo de log temporario (padrão: só stdout)
+    LOG_FILE_LEVEL   INFO, ERROR (padrão: INFO)
 
 # ::Códigos de saída:
     0  encerrou normalmente (em RUN_ONCE, todas as URLs OK)
@@ -30,3 +31,6 @@
     :: 4. Parar e remover
     docker stop <nome-container>
     docker rm <nome-container>
+
+    :: Ver o arquivo temporário de log
+    docker exec monitor cat <caminho do LOG_FILE>
