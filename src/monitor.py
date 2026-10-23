@@ -27,12 +27,12 @@ class Config:
 class CheckResult:
     url: str
     ok: bool
-    status: str          # código HTTP ou tipo do erro (TIMEOUT, CONNECTION_ERROR...)
+    status: str # HTTP ou erro (TIMEOUT, etc)
     elapsed_ms: float
 
 
+# valida a configuração a partir do env
 def load_config() -> Config:
-    """Lê e valida a configuração a partir das variáveis de ambiente."""
     raw_urls = os.getenv("URLS", "")
     urls = [u.strip() for u in raw_urls.split(",") if u.strip()]
     if not urls:
@@ -80,12 +80,11 @@ def setup_logging(config: Config) -> None:
 
 
 def check_url(url: str, timeout: float) -> CheckResult:
-    """Faz uma requisição GET, mede o tempo e classifica o resultado."""
     start = time.perf_counter()
     try:
         response = requests.get(url, timeout=timeout)
         elapsed = (time.perf_counter() - start) * 1000
-        # 2xx e 3xx (após redirects) contam como sucesso
+        # 2xx e 3xx contam como sucesso também
         ok = response.status_code < 400
         return CheckResult(url, ok, str(response.status_code), elapsed)
     except requests.exceptions.Timeout:
@@ -107,7 +106,6 @@ def log_result(result: CheckResult) -> None:
 
 
 def run_round(config: Config) -> bool:
-    """Checa todas as URLs. Retorna True se todas estiverem OK."""
     all_ok = True
     for url in config.urls:
         if stop_event.is_set():
@@ -143,7 +141,7 @@ def main() -> int:
 
     while not stop_event.is_set():
         run_round(config)
-        stop_event.wait(config.interval)  # dorme, mas acorda rápido ao receber SIGTERM
+        stop_event.wait(config.interval)
 
     logger.info("Monitor finalizado.")
     return 0
