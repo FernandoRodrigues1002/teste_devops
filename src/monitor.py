@@ -28,7 +28,7 @@ class Config:
 class CheckResult:
     url: str
     ok: bool
-    status: str # HTTP ou erro (TIMEOUT, etc)
+    status: str  # HTTP ou erro (TIMEOUT, etc)
     elapsed_ms: float
 
 
@@ -102,6 +102,7 @@ def check_url(url: str, timeout: float) -> CheckResult:
         # 2xx e 3xx contam como sucesso também
         ok = response.status_code < 400
         return CheckResult(url, ok, str(response.status_code), elapsed)
+
     except requests.exceptions.Timeout:
         status = "TIMEOUT"
     except requests.exceptions.SSLError:
